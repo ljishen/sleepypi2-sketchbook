@@ -1,7 +1,6 @@
-# Upload sketches to Sleepy Pi 2 from Raspberry Pi 3 using Makefile Demo
+# Upload sketches from Raspberry Pi without IDE
 
 ## How to use
--------------
 
 1. Follow this instruction [Sleepy-Pi-Setup.sh](https://github.com/ljishen/Sleepy-Pi-Setup) to setup Sleepy Pi 2
 
