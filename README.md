@@ -1,6 +1,6 @@
 # sleepypi2-sketchbook
 
-This is a demo for uploading sketches to Sleepy Pi 2 from Raspberry Pi without Arduino IDE.
+This is a demo for uploading sketches to Sleepy Pi 2 from Raspberry Pi without Arduino IDE, but Makefile.
 
 ## Usage
 
