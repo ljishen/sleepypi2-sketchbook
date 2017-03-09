@@ -5,7 +5,7 @@
 // RPi regardless of any handshaking.
 //
 // + Prints out the Current Consumption of the RPi to the Serial Monitor
-//   every sec
+//   every half sec
 //
 
 // **** INCLUDES *****
@@ -217,8 +217,8 @@ void loop()
         Serial.println(" mA");
 
         digitalWrite(LED_PIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-        delay(500);               // wait for a second
+        delay(250);                    // wait for a quarter second
         digitalWrite(LED_PIN, LOW);    // turn the LED off by making the voltage LOW
-        delay(500);               // wait for a second
+        delay(250);                    // wait for a quarter second
     }
 }
