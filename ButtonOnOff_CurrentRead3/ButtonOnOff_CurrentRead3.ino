@@ -5,25 +5,27 @@
 // RPi regardless of any handshaking.
 //
 // + Prints out the Current Consumption of the RPi to the Serial Monitor
-//   every half sec
+//   every 1/4 secs
 //
 
 // **** INCLUDES *****
 #include "SleepyPi2.h"
 #include <Time.h>
+#include <Timezone.h>
 #include <LowPower.h>
 #include <PCF8523.h>
 #include <Wire.h>
 
+
 #define kBUTTON_POWEROFF_TIME_MS   2000
 #define kBUTTON_FORCEOFF_TIME_MS   8000
 
-const char *monthName[12] = {
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-};
+// See https://github.com/JChristensen/Timezone for more details
+TimeChangeRule myDST = {"PDT", Second, Sun, Mar, 2, -420};    //Daylight time = UTC - 7 hours
+TimeChangeRule mySTD = {"PST", First, Sun, Nov, 2, -480};     //Standard time = UTC - 8 hours
+Timezone myTZ(myDST, mySTD);
 
-tmElements_t tm;
+TimeChangeRule *tcr;        //pointer to the time change rule, use to get TZ abbrev
 
 // States
 typedef enum {
@@ -48,75 +50,57 @@ ePISTATE       pi_state = ePI_OFF;
 bool state = LOW;
 unsigned long  time, timePress;
 
+
 void button_isr()
 {
     // A handler for the Button interrupt.
     buttonPressed = true;
 }
 
-bool getTime(const char *str)
+//Print an integer in "00" format (with leading zero).
+//Input value assumed to be between 0 and 99.
+void sPrintI00(int val)
 {
-    int Hour, Min, Sec;
-
-    if (sscanf(str, "%d:%d:%d", &Hour, &Min, &Sec) != 3) return false;
-    tm.Hour = Hour;
-    tm.Minute = Min;
-    tm.Second = Sec;
-    return true;
-}
-
-bool getDate(const char *str)
-{
-    char Month[12];
-    int Day, Year;
-    uint8_t monthIndex;
-
-    if (sscanf(str, "%s %d %d", Month, &Day, &Year) != 3) return false;
-    for (monthIndex = 0; monthIndex < 12; monthIndex++) {
-        if (strcmp(Month, monthName[monthIndex]) == 0) break;
-    }
-    if (monthIndex >= 12) return false;
-    tm.Day = Day;
-    tm.Month = monthIndex + 1;
-    tm.Year = CalendarYrToTm(Year);
-    return true;
-}
-
-void print2digits(int number)
-{
-    if (number >= 0 && number < 10) {
-        Serial.write('0');
-    }
-    Serial.print(number);
-}
-
-void printTimeNow()
-{
-    // Read the time
-    DateTime now = SleepyPi.readTime();
-
-    Serial.print('[');
-    Serial.print(now.month());
-    Serial.print('/');
-    Serial.print(now.day());
-    Serial.print('/');
-    Serial.print(now.year(), DEC);
-    Serial.print(' ');
-    print2digits(now.hour());
-    Serial.print(':');
-    print2digits(now.minute());
-    Serial.print(':');
-    print2digits(now.second());
-    Serial.print("] ");
-
+    if (val < 10) Serial.print('0');
+    Serial.print(val, DEC);
     return;
 }
 
+//Print an integer in ":00" format (with leading zero).
+//Input value assumed to be between 0 and 99.
+void sPrintDigits(int val)
+{
+    Serial.print(':');
+    if(val < 10) Serial.print('0');
+    Serial.print(val, DEC);
+}
 
-//void alarm_isr()
-//{
-// A handler for the Alarm interrupt.
-//}
+//Function to print time with time zone
+void printTime(time_t t, char *tz)
+{
+    Serial.print('[');
+    sPrintI00(hour(t));
+    sPrintDigits(minute(t));
+    sPrintDigits(second(t));
+    Serial.print(' ');
+    Serial.print(dayShortStr(weekday(t)));
+    Serial.print(' ');
+    sPrintI00(day(t));
+    Serial.print(' ');
+    Serial.print(monthShortStr(month(t)));
+    Serial.print(' ');
+    Serial.print(year(t));
+    Serial.print(' ');
+    Serial.print(tz);
+    Serial.print("] ");
+}
+
+uint32_t  readRTCTime()
+{
+    DateTime now = SleepyPi.readTime();
+    return now.unixtime();
+}
+
 
 void setup()
 {
@@ -137,15 +121,11 @@ void setup()
 
     SleepyPi.rtcInit(true);
 
-    // Default the clock to the time this was compiled.
-    // Comment out if the clock is set by other means
-    // ...get the date and time the compiler was run
-    if (getDate(__DATE__) && getTime(__TIME__)) {
-        // and configure the RTC with this info
-        SleepyPi.setTime(DateTime(F(__DATE__), F(__TIME__)));
-    }
-
-    printTimeNow();
+    setSyncProvider(readRTCTime);   // the function to get the time from the RTC
+    if (timeStatus() != timeSet)
+        Serial.println("Unable to sync with the RTC");
+    else
+        Serial.println("RTC has set the system time");
 }
 
 void loop()
@@ -209,16 +189,13 @@ void loop()
             break;
         }
     } else {
-        printTimeNow();
+        time_t local = myTZ.toLocal(now(), &tcr);
+        printTime(local, tcr -> abbrev);
 
         pi_current = SleepyPi.rpiCurrent();
-        Serial.print("Current: ");
         Serial.print(pi_current);
         Serial.println(" mA");
 
-        digitalWrite(LED_PIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-        delay(250);                    // wait for a quarter second
-        digitalWrite(LED_PIN, LOW);    // turn the LED off by making the voltage LOW
-        delay(250);                    // wait for a quarter second
+        delay(250);
     }
 }
