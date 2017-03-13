@@ -79,19 +79,19 @@ void sPrintDigits(int val)
 void printTime(time_t t, char *tz)
 {
     Serial.print('[');
+    Serial.print(dayShortStr(weekday(t)));
+    Serial.print(' ');
+    Serial.print(monthShortStr(month(t)));
+    Serial.print(' ');
+    sPrintI00(day(t));
+    Serial.print(' ');
     sPrintI00(hour(t));
     sPrintDigits(minute(t));
     sPrintDigits(second(t));
     Serial.print(' ');
-    Serial.print(dayShortStr(weekday(t)));
-    Serial.print(' ');
-    sPrintI00(day(t));
-    Serial.print(' ');
-    Serial.print(monthShortStr(month(t)));
+    Serial.print(tz);
     Serial.print(' ');
     Serial.print(year(t));
-    Serial.print(' ');
-    Serial.print(tz);
     Serial.print("] ");
 }
 
