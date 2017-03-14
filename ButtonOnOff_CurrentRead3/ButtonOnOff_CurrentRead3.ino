@@ -5,7 +5,7 @@
 // RPi regardless of any handshaking.
 //
 // + Prints out the Current Consumption of the RPi to the Serial Monitor
-//   every 1/4 secs
+//   every half secs
 //
 
 // **** INCLUDES *****
@@ -196,6 +196,6 @@ void loop()
         Serial.print(pi_current);
         Serial.println(" mA");
 
-        delay(250);
+        delay(500);
     }
 }
