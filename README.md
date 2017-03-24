@@ -10,7 +10,7 @@ This is a demo for uploading sketches to Sleepy Pi 2 from Raspberry Pi without A
 
 1. Clone this repository
    ```bash
-   https://github.com/ljishen/sleepypi2-sketchbook.git`
+   git clone https://github.com/ljishen/sleepypi2-sketchbook.git
    ```
 
 1. Run demo
