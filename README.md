@@ -25,6 +25,6 @@ This is a demo for uploading sketches to Sleepy Pi 2 from Raspberry Pi without A
 ## Logger
 
 ```bash
-ttylog -b 9600 -d /dev/ttyS0 -f | tee /path/to/logfile 2>&1
+ttylog -b 9600 -d /dev/ttyS0 -f 2>&1 | tee /path/to/logfile
 ```
 See [ttylog](http://ttylog.sourceforge.net/index.html) for more details.
